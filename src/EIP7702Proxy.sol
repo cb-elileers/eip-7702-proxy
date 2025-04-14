@@ -24,7 +24,7 @@ contract EIP7702Proxy is Proxy {
 
     /// @notice Typehash for setting implementation
     bytes32 internal constant _IMPLEMENTATION_SET_TYPEHASH = keccak256(
-        "EIP7702ProxyImplementationSet(uint256 chainId,address proxy,uint256 nonce,address currentImplementation,address newImplementation,bytes callData,address validator)"
+        "EIP7702ProxyImplementationSet(uint256 chainId,address proxy,uint256 nonce,address currentImplementation,address newImplementation,bytes callData,address validator,uint256 expiry)"
     );
 
     /// @notice Address of the global nonce tracker for initialization
@@ -44,6 +44,9 @@ contract EIP7702Proxy is Proxy {
 
     /// @notice Validator did not return ACCOUNT_STATE_VALIDATION_SUCCESS
     error InvalidValidation();
+
+    /// @notice Signature has expired
+    error SignatureExpired();
 
     /// @notice Initializes the proxy with a default receiver implementation and an external nonce tracker
     ///
@@ -72,9 +75,12 @@ contract EIP7702Proxy is Proxy {
         address newImplementation,
         bytes calldata callData,
         address validator,
+        uint256 expiry,
         bytes calldata signature,
         bool allowCrossChainReplay
     ) external {
+        if (block.timestamp >= expiry) revert SignatureExpired();
+
         // Construct hash using typehash to prevent signature collisions
         bytes32 hash = keccak256(
             abi.encode(
@@ -85,7 +91,8 @@ contract EIP7702Proxy is Proxy {
                 ERC1967Utils.getImplementation(),
                 newImplementation,
                 keccak256(callData),
-                validator
+                validator,
+                expiry
             )
         );
 

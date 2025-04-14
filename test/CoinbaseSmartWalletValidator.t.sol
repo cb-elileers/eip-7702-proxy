@@ -27,7 +27,7 @@ contract CoinbaseSmartWalletValidatorTest is Test {
     bytes32 internal constant _IMPLEMENTATION_SLOT = 0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
 
     bytes32 _IMPLEMENTATION_SET_TYPEHASH = keccak256(
-        "EIP7702ProxyImplementationSet(uint256 chainId,address proxy,uint256 nonce,address currentImplementation,address newImplementation,bytes callData,address validator)"
+        "EIP7702ProxyImplementationSet(uint256 chainId,address proxy,uint256 nonce,address currentImplementation,address newImplementation,bytes callData,address validator,uint256 expiry)"
     );
 
     function setUp() public {
@@ -58,7 +58,9 @@ contract CoinbaseSmartWalletValidatorTest is Test {
             _signSetImplementationData(_EOA_PRIVATE_KEY, initArgs, address(_implementation), address(_validator));
 
         // Should not revert
-        EIP7702Proxy(_eoa).setImplementation(address(_implementation), initArgs, address(_validator), signature, true);
+        EIP7702Proxy(_eoa).setImplementation(
+            address(_implementation), initArgs, address(_validator), type(uint256).max, signature, true
+        );
     }
 
     function test_succeeds_whenWalletHasMultipleOwners() public {
@@ -73,7 +75,9 @@ contract CoinbaseSmartWalletValidatorTest is Test {
             _signSetImplementationData(_EOA_PRIVATE_KEY, initArgs, address(_implementation), address(_validator));
 
         // Should not revert
-        EIP7702Proxy(_eoa).setImplementation(address(_implementation), initArgs, address(_validator), signature, true);
+        EIP7702Proxy(_eoa).setImplementation(
+            address(_implementation), initArgs, address(_validator), type(uint256).max, signature, true
+        );
     }
 
     function test_reverts_whenWalletHasNoOwners() public {
@@ -84,7 +88,9 @@ contract CoinbaseSmartWalletValidatorTest is Test {
             _signSetImplementationData(_EOA_PRIVATE_KEY, initArgs, address(_implementation), address(_validator));
 
         vm.expectRevert(CoinbaseSmartWalletValidator.Unintialized.selector);
-        EIP7702Proxy(_eoa).setImplementation(address(_implementation), initArgs, address(_validator), signature, true);
+        EIP7702Proxy(_eoa).setImplementation(
+            address(_implementation), initArgs, address(_validator), type(uint256).max, signature, true
+        );
     }
 
     function test_succeeds_whenWalletHadOwnersButLastOwnerRemoved() public {
@@ -92,7 +98,9 @@ contract CoinbaseSmartWalletValidatorTest is Test {
         bytes memory initArgs = _createInitArgs(_newOwner);
         bytes memory signature =
             _signSetImplementationData(_EOA_PRIVATE_KEY, initArgs, address(_implementation), address(_validator));
-        EIP7702Proxy(_eoa).setImplementation(address(_implementation), initArgs, address(_validator), signature, true);
+        EIP7702Proxy(_eoa).setImplementation(
+            address(_implementation), initArgs, address(_validator), type(uint256).max, signature, true
+        );
 
         // Now remove the owner through the wallet interface
         vm.prank(_newOwner);
@@ -123,7 +131,9 @@ contract CoinbaseSmartWalletValidatorTest is Test {
         vm.expectRevert(
             abi.encodeWithSelector(IAccountStateValidator.InvalidImplementation.selector, address(_implementation))
         );
-        EIP7702Proxy(_eoa).setImplementation(address(_implementation), initArgs, address(validator), signature, true);
+        EIP7702Proxy(_eoa).setImplementation(
+            address(_implementation), initArgs, address(validator), type(uint256).max, signature, true
+        );
     }
 
     // Helper functions from coinbaseImplementation.t.sol
@@ -158,7 +168,8 @@ contract CoinbaseSmartWalletValidatorTest is Test {
                 _getERC1967Implementation(address(_eoa)),
                 address(implementation),
                 keccak256(initArgs),
-                address(validator)
+                address(validator),
+                type(uint256).max // default to max expiry
             )
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPk, initHash);

@@ -19,7 +19,7 @@ abstract contract EIP7702ProxyBase is Test {
     bytes32 internal constant IMPLEMENTATION_SLOT = 0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
 
     bytes32 internal constant _IMPLEMENTATION_SET_TYPEHASH = keccak256(
-        "EIP7702ProxyImplementationSet(uint256 chainId,address proxy,uint256 nonce,address currentImplementation,address newImplementation,bytes callData,address validator)"
+        "EIP7702ProxyImplementationSet(uint256 chainId,address proxy,uint256 nonce,address currentImplementation,address newImplementation,bytes callData,address validator,uint256 expiry)"
     );
 
     /// @dev Test account private keys and addresses
@@ -73,6 +73,7 @@ abstract contract EIP7702ProxyBase is Test {
             address(_implementation),
             initArgs,
             address(_validator),
+            type(uint256).max,
             signature,
             true // Allow cross-chain replay for tests
         );
@@ -84,6 +85,7 @@ abstract contract EIP7702ProxyBase is Test {
      * @param newImplementationAddress New implementation contract address
      * @param chainId Chain ID for the signature
      * @param callData Initialization data for the implementation
+     * @param validator Validator contract address
      * @return Signature bytes
      */
     function _signSetImplementationData(
@@ -105,7 +107,8 @@ abstract contract EIP7702ProxyBase is Test {
                 currentImpl,
                 newImplementationAddress,
                 keccak256(callData),
-                validator
+                validator,
+                type(uint256).max // default to max expiry
             )
         );
 

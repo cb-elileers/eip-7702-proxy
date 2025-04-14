@@ -38,7 +38,7 @@ contract CoinbaseImplementationTest is Test {
     bytes32 internal constant _IMPLEMENTATION_SLOT = 0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
 
     bytes32 _IMPLEMENTATION_SET_TYPEHASH = keccak256(
-        "EIP7702ProxyImplementationSet(uint256 chainId,address proxy,uint256 nonce,address currentImplementation,address newImplementation,bytes callData,address validator)"
+        "EIP7702ProxyImplementationSet(uint256 chainId,address proxy,uint256 nonce,address currentImplementation,address newImplementation,bytes callData,address validator,uint256 expiry)"
     );
 
     function setUp() public virtual {
@@ -72,6 +72,7 @@ contract CoinbaseImplementationTest is Test {
             address(_cbswImplementation),
             initArgs,
             address(_cbswValidator),
+            type(uint256).max,
             signature,
             true // Allow cross-chain replay for tests
         );
@@ -107,7 +108,8 @@ contract CoinbaseImplementationTest is Test {
                 _getERC1967Implementation(address(_eoa)),
                 address(_cbswImplementation),
                 keccak256(initArgs),
-                address(_cbswValidator)
+                address(_cbswValidator),
+                type(uint256).max // default to max expiry
             )
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPk, initHash);
@@ -233,7 +235,7 @@ contract CoinbaseImplementationTest is Test {
 
         vm.expectRevert(CoinbaseSmartWallet.Initialized.selector);
         EIP7702Proxy(_eoa).setImplementation(
-            address(_cbswImplementation), initArgs, address(_cbswValidator), signature, true
+            address(_cbswImplementation), initArgs, address(_cbswValidator), type(uint256).max, signature, true
         );
     }
 }
