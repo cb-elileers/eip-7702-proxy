@@ -8,4 +8,4 @@ on:
 
 jobs:
   sarif-upload:
-    uses: ./.github/workflows/sarif-upload.yml 
+    uses: ./.github/workflows/actions/sarif-upload 

@@ -1,15 +1,11 @@
 name: SARIF Upload
+
 on:
-  # Only run this action on pushes / pull requests to main branch
-  push:
-    branches: [main, testing]
-  pull_request:
-    branches: [main, testing]
+  workflow_call:
 
 jobs:
-  analyze:
-    runs-on:
-      - ubuntu-latest
+  sarif-upload:
+    runs-on: ubuntu-latest
     steps:
       - name: Git Checkout
         uses: actions/checkout@v4
@@ -46,4 +42,4 @@ jobs:
 permissions:
   security-events: write
   contents: read
-  actions: read
+  actions: read 
