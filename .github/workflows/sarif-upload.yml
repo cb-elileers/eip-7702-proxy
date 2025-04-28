@@ -37,7 +37,7 @@ jobs:
           echo "$FILES"
           
           # Look specifically in audits/sarif directory
-          SARIF_FILE=$(echo "$FILES" | grep -E 'audits/sarif/.*\.sarif(\.json)?$' | head -n 1)
+          SARIF_FILE=$(echo "$FILES" | grep -E 'audits/sarif/.*\.(sarif|sarif\.json)$' | head -n 1)
           
           if [ -n "$SARIF_FILE" ]; then
             echo "Found SARIF file: $SARIF_FILE"
@@ -46,7 +46,7 @@ jobs:
           else
             echo "No SARIF file found in audits/sarif directory - checking all directories"
             # Fallback to check all directories
-            SARIF_FILE=$(echo "$FILES" | grep -E '\.sarif(\.json)?$' | head -n 1)
+            SARIF_FILE=$(echo "$FILES" | grep -E '\.(sarif|sarif\.json)$' | head -n 1)
             if [ -n "$SARIF_FILE" ]; then
               echo "Found SARIF file in other location: $SARIF_FILE"
               echo "sarif_file=$SARIF_FILE" >> $GITHUB_OUTPUT
