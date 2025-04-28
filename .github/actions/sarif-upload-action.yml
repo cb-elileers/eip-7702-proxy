@@ -1,0 +1,49 @@
+name: SARIF Upload
+on:
+  # Only run this action on pushes / pull requests to main branch
+  push:
+    branches: [main, testing]
+  pull_request:
+    branches: [main, testing]
+
+jobs:
+  analyze:
+    runs-on:
+      - ubuntu-latest
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+
+      - name: Find SARIF file in diff
+        id: find-sarif
+        run: |
+          # Get the list of changed files
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }})
+          else
+            FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+          fi
+          
+          # Find the first .sarif or .sarif.json file
+          SARIF_FILE=$(echo "$FILES" | grep -E '\.sarif(\.json)?$' | head -n 1)
+          
+          if [ -n "$SARIF_FILE" ]; then
+            echo "sarif_file=$SARIF_FILE" >> $GITHUB_OUTPUT
+            echo "sarif_found=true" >> $GITHUB_OUTPUT
+          else
+            echo "No SARIF file found in changes - skipping upload"
+            echo "sarif_found=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload SARIF file
+        if: steps.find-sarif.outputs.sarif_found == 'true'
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ${{ steps.find-sarif.outputs.sarif_file }}
+            
+# Set GH_TOKEN permissions to be as restricted as possible
+# security-events must be set to write for the SARIF upload step
+permissions:
+  security-events: write
+  contents: read
+  actions: read
