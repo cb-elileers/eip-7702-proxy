@@ -33,15 +33,28 @@ jobs:
             fi
           fi
           
-          # Find the first .sarif or .sarif.json file
-          SARIF_FILE=$(echo "$FILES" | grep -E '\.sarif(\.json)?$' | head -n 1)
+          echo "Changed files:"
+          echo "$FILES"
+          
+          # Look specifically in audits/sarif directory
+          SARIF_FILE=$(echo "$FILES" | grep -E 'audits/sarif/.*\.sarif(\.json)?$' | head -n 1)
           
           if [ -n "$SARIF_FILE" ]; then
+            echo "Found SARIF file: $SARIF_FILE"
             echo "sarif_file=$SARIF_FILE" >> $GITHUB_OUTPUT
             echo "sarif_found=true" >> $GITHUB_OUTPUT
           else
-            echo "No SARIF file found in changes - skipping upload"
-            echo "sarif_found=false" >> $GITHUB_OUTPUT
+            echo "No SARIF file found in audits/sarif directory - checking all directories"
+            # Fallback to check all directories
+            SARIF_FILE=$(echo "$FILES" | grep -E '\.sarif(\.json)?$' | head -n 1)
+            if [ -n "$SARIF_FILE" ]; then
+              echo "Found SARIF file in other location: $SARIF_FILE"
+              echo "sarif_file=$SARIF_FILE" >> $GITHUB_OUTPUT
+              echo "sarif_found=true" >> $GITHUB_OUTPUT
+            else
+              echo "No SARIF file found in changes - skipping upload"
+              echo "sarif_found=false" >> $GITHUB_OUTPUT
+            fi
           fi
 
       - name: Upload SARIF file
