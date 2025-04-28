@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Git Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for all branches and tags
 
       - name: Find SARIF file in diff
         id: find-sarif
@@ -21,7 +23,13 @@ jobs:
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }})
           else
-            FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+            # For push events, check if we have a previous commit
+            if [ -n "${{ github.event.before }}" ]; then
+              FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+            else
+              # If no previous commit, list all files in the current commit
+              FILES=$(git ls-tree --name-only -r ${{ github.sha }})
+            fi
           fi
           
           # Find the first .sarif or .sarif.json file
