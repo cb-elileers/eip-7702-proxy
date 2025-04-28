@@ -8,4 +8,10 @@ on:
 
 jobs:
   sarif-upload:
-    uses: cb-elileers/eip-7702-proxy/.github/workflows/sarif-upload.yml@main 
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - uses: ./.github/workflows/sarif-upload.yml 
