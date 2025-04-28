@@ -14,4 +14,4 @@ jobs:
         with:
           fetch-depth: 0
       
-      - uses: ./.github/workflows/sarif-upload.yml 
+      - uses: ./.github/workflows/actions/sarif-upload
